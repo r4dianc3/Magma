@@ -1,0 +1,5 @@
+START
+
+func setx(void) {
+    var x = 10+5
+}
