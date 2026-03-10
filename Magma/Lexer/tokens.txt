@@ -47,7 +47,7 @@ QMARK - ?
 
 # pointer
 POINT_STAR - @
-POINT_AND - §
+POINT_AND - `
 
 # assignment
 ASSIGN - =
