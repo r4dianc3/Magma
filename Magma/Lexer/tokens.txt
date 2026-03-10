@@ -22,7 +22,7 @@ REPEAT
 DO - DO...WHILE
 WAIT_UNTIL
 CONTINUE
-EXTERN - External
+EXTERN - External function
 FOR
 GOTO
 REGISTER
@@ -46,8 +46,8 @@ DECREMENT - --
 QMARK - ?
 
 # pointer
-POINT_STAR - *
-POINT_AND - &
+POINT_STAR - @
+POINT_AND - §
 
 # assignment
 ASSIGN - =
