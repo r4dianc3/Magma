@@ -114,53 +114,55 @@ typedef enum
 typedef struct
 {
     const char *text;
+    uint8_t length;
     TokenType type;
 } Operator;
 
 static Operator operators[] = {
-    {"+=", TOK_PLUS_ASSIGN},
-    {"++", TOK_INC},
-    {"+", TOK_PLUS},
+    {"+=", 2, TOK_PLUS_ASSIGN},
+    {"++", 2, TOK_INC},
+    {"+", 1, TOK_PLUS},
 
-    {"-=", TOK_MINUS_ASSIGN},
-    {"--", TOK_DEC},
-    {"->", TOK_ARROW},
-    {"-", TOK_MINUS},
+    {"-=", 2, TOK_MINUS_ASSIGN},
+    {"--", 2, TOK_DEC},
+    {"->", 2, TOK_ARROW},
+    {"-", 1, TOK_MINUS},
 
-    {"*=", TOK_STAR_ASSIGN},
-    {"*", TOK_STAR},
+    {"*=", 2, TOK_STAR_ASSIGN},
+    {"*", 1, TOK_STAR},
 
-    {"/=", TOK_SLASH_ASSIGN},
-    {"/", TOK_SLASH},
+    {"/=", 2, TOK_SLASH_ASSIGN},
+    {"/", 1, TOK_SLASH},
 
-    {"%=", TOK_PCNT_ASSIGN},
-    {"%", TOK_PERCENT},
+    {"%=", 2, TOK_PCNT_ASSIGN},
+    {"%", 1, TOK_PERCENT},
 
-    {"==", TOK_EQ_EQ},
-    {"=", TOK_ASSIGN},
+    {"==", 2, TOK_EQ_EQ},
+    {"=", 1, TOK_ASSIGN},
 
-    {"!=", TOK_NOT_EQ},
-    {"!", TOK_NOT},
+    {"!=", 2, TOK_NOT_EQ},
+    {"!", 1, TOK_NOT},
 
-    {"<=", TOK_LEQ},
-    {"<<", TOK_BIT_LSHIFT},
-    {"<", TOK_LESSTHAN},
+    {"<=", 2, TOK_LEQ},
+    {"<<", 2, TOK_BIT_LSHIFT},
+    {"<", 1, TOK_LESSTHAN},
 
-    {">=", TOK_GEQ},
-    {">>", TOK_BIT_RSHIFT},
-    {">", TOK_GREATERTHAN},
+    {">=", 2, TOK_GEQ},
+    {">>", 2, TOK_BIT_RSHIFT},
+    {">", 1, TOK_GREATERTHAN},
 
-    {"&&", TOK_AND},
-    {"||", TOK_OR},
+    {"&&", 2, TOK_AND},
+    {"||", 2, TOK_OR},
 
-    {"&", TOK_BIT_AND},
-    {"|", TOK_BIT_OR},
-    {"^", TOK_BIT_XOR},
-    {"~", TOK_BIT_NOT},
+    {"&", 1, TOK_BIT_AND},
+    {"|", 1, TOK_BIT_OR},
+    {"^", 1, TOK_BIT_XOR},
+    {"~", 1, TOK_BIT_NOT},
 
-    {"?", TOK_QMARK},
+    {"?", 1, TOK_QMARK},
 
-    {NULL, 0}};
+    {NULL, 0}
+};
 
 // Representation of a single token produced by the lexer
 // `type` indicates the kind of token, `start` points into the source
@@ -404,12 +406,11 @@ Token lex_operator(Lexer *lexer)
 
     for (int i = 0; operators[i].text; i++)
     {
-        size_t length = strlen(operators[i].text);
 
-        if ((lexer->end - start) >= length &&
-            strncmp(start, operators[i].text, length) == 0)
+        if ((lexer->end - start) >= operators[1].length &&
+            strncmp(start, operators[i].text, operators[1].length) == 0)
         {
-            lexer->current += length;
+            lexer->current += operators[1].length;
             return make_token(lexer, operators[i].type, start);
         }
     }
