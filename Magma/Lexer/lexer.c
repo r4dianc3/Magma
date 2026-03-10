@@ -192,7 +192,7 @@ TokenType check_keyword(const char *start, uint32_t length) {
 // Scan identifier or keyword
 Token lex_identifier(Lexer *lexer) {
 	const char *start = lexer->current;
-	while (lexer->current < lexer->end && (isanum(*lexer->current) || *lexer->current == '_'))
+	while (lexer->current < lexer->end && (isalnum(*lexer->current) || *lexer->current == '_'))
 		lexer->current++;
 	TokenType type = check_keyword(start, (uint32_t)(lexer->current - start));
 	return make_token(lexer, type, start);
