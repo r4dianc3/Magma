@@ -10,7 +10,7 @@
 #define IS_ALNUM(c) (IS_ALPHA(c) || IS_DIGIT(c))                               // letter or digit
 
 // TokenType defines all possible token kinds the lexer can produce.
-typedef enum
+typedef enum TokenTypeEnum
 {
     // LITERALS: identifiers, numbers, strings
     TOK_IDENTIFIER,
@@ -112,7 +112,7 @@ typedef enum
     TOK_EOF      // End of file
 } TokenType;
 
-typedef struct
+typedef struct OperatorStruct
 {
     const char *text;
     uint8_t length;
@@ -162,24 +162,31 @@ static Operator operators[] = {
 
     {"?", 1, TOK_QMARK},
 
-    {NULL, 0}
+    {NULL, 0, 0}
 };
 
 // Representation of a single token produced by the lexer
 // `type` indicates the kind of token, `start` points into the source
 // buffer at the first character of the token, and `length` stores how many
 // characters long the token is.
-typedef struct
+typedef struct TokenStruct
 {
     TokenType type;
     const char *start;
     uint32_t length;
 } Token;
 
+typedef struct TokenStreamStruct
+{
+    Token* tokens;
+    int count;
+    int capacity;
+} TokenStream;
+
 // Lexer holds the state required while scanning. `current` points to the
 // next character to read, and `end` marks one past the last character of the
 // input buffer.
-typedef struct
+typedef struct LexerStateStruct
 {
     const char *current;
     const char *end;
@@ -203,6 +210,42 @@ static inline Token make_token(Lexer *lexer, TokenType type, const char *start)
     currentTOK.start = start;
     currentTOK.length = (uint32_t)(lexer->current - start);
     return currentTOK;
+}
+
+void tokenstream_add(TokenStream* ts, Token token) {
+    if (ts->count >= ts->capacity) {
+        ts->capacity *= 2;
+        ts->tokens = realloc(ts->tokens, sizeof(Token) * ts->capacity);
+    }
+
+    ts->tokens[ts->count++] = token;
+}
+
+void tokenstream_init(TokenStream* ts)
+{
+    ts->count = 0;
+    ts->capacity = 64;
+    ts->tokens = malloc(sizeof(Token) * ts->capacity);
+}
+
+void tokenstream_free(TokenStream* ts)
+{
+    free(ts->tokens);
+    ts->tokens = NULL;
+    ts->count = 0;
+    ts->capacity = 0;
+}
+
+void lexer_scan_all(Lexer* lexer, TokenStream* ts)
+{
+    for (;;)
+    {
+        Token tok = lexer_next(lexer);
+        tokenstream_add(ts, tok);
+
+        if (tok.type == TOK_EOF)
+            break;
+    }
 }
 
 // Check whether the identifier starting at `start` with given `length`
@@ -503,5 +546,5 @@ Token lexer_next(Lexer *lexer)
         return make_token(lexer, TOK_NEWLINE, lexer->current - 1); // NEWLINE
     }
 
-    return lex_operator(lexer);
-}
+    return lex_operator(lexer); // OPERATOR
+} 
