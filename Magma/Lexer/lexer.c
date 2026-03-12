@@ -47,7 +47,7 @@ typedef enum TokenTypeEnum
     TOK_TYPEDEF,
     TOK_GLOBAL,
     TOK_PRINTT, // PRINT TO CONSOLE
-    TOK_LIB, // IMPORT LIBRARY
+    TOK_LIB,    // IMPORT LIBRARY
 
     // OPERATORS: arithmetic and other symbols
     TOK_PLUS,    // +
@@ -164,8 +164,7 @@ static Operator operators[] = {
 
     {"?", 1, TOK_QMARK},
 
-    {NULL, 0, 0}
-};
+    {NULL, 0, 0}};
 
 // Representation of a single token produced by the lexer
 // `type` indicates the kind of token, `start` points into the source
@@ -180,7 +179,7 @@ typedef struct TokenStruct
 
 typedef struct TokenStreamStruct
 {
-    Token* tokens;
+    Token *tokens;
     int count;
     int capacity;
 } TokenStream;
@@ -214,8 +213,10 @@ static inline Token make_token(Lexer *lexer, TokenType type, const char *start)
     return currentTOK;
 }
 
-void tokenstream_add(TokenStream* ts, Token token) {
-    if (ts->count >= ts->capacity) {
+void tokenstream_add(TokenStream *ts, Token token)
+{
+    if (ts->count >= ts->capacity)
+    {
         ts->capacity *= 2;
         ts->tokens = realloc(ts->tokens, sizeof(Token) * ts->capacity);
     }
@@ -223,14 +224,14 @@ void tokenstream_add(TokenStream* ts, Token token) {
     ts->tokens[ts->count++] = token;
 }
 
-void tokenstream_init(TokenStream* ts)
+void tokenstream_init(TokenStream *ts)
 {
     ts->count = 0;
     ts->capacity = 64;
     ts->tokens = malloc(sizeof(Token) * ts->capacity);
 }
 
-void tokenstream_free(TokenStream* ts)
+void tokenstream_free(TokenStream *ts)
 {
     free(ts->tokens);
     ts->tokens = NULL;
@@ -238,7 +239,99 @@ void tokenstream_free(TokenStream* ts)
     ts->capacity = 0;
 }
 
-void lexer_scan_all(Lexer* lexer, TokenStream* ts)
+// Forward declarations
+void skip_whitespace(Lexer *lexer);
+Token lex_identifier(Lexer *lexer);
+Token lex_number(Lexer *lexer);
+Token lex_string(Lexer *lexer);
+Token lex_comment(Lexer *lexer);
+Token lex_operator(Lexer *lexer);
+
+// Return the next token from the input stream. Skips whitespace and handles
+// all single-character tokens as well as multi-character operators, literals,
+// identifiers, numbers, strings, and comments.
+Token lexer_next(Lexer *lexer)
+{
+    skip_whitespace(lexer); // SKIP WHITESPACE
+
+    if (lexer->current >= lexer->end)
+        return make_token(lexer, TOK_EOF, lexer->current); // END OF FILE
+
+    char currentchar = *lexer->current;
+
+    if (IS_ALPHA(currentchar) || currentchar == '_') // IDENTIFIER
+        return lex_identifier(lexer);
+
+    if (IS_DIGIT(currentchar)) // NUMBER
+        return lex_number(lexer);
+
+    if (currentchar == '"') // STRING
+        return lex_string(lexer);
+
+    if ((lexer->end - lexer->current) > 1 && currentchar == '/' && lexer->current[1] == '/') // COMMENT
+        return lex_comment(lexer);
+
+    switch (*lexer->current)
+    {
+    case '(':
+        lexer->current++;
+        return make_token(lexer, TOK_LPAREN, lexer->current - 1); // (
+
+    case ')':
+        lexer->current++;
+        return make_token(lexer, TOK_RPAREN, lexer->current - 1); // )
+
+    case '{':
+        lexer->current++;
+        return make_token(lexer, TOK_LBRACE, lexer->current - 1); // {
+
+    case '}':
+        lexer->current++;
+        return make_token(lexer, TOK_RBRACE, lexer->current - 1); // }
+
+    case '[':
+        lexer->current++;
+        return make_token(lexer, TOK_LBRACKET, lexer->current - 1); // [
+
+    case ']':
+        lexer->current++;
+        return make_token(lexer, TOK_RBRACKET, lexer->current - 1); // ]
+
+    case ',':
+        lexer->current++;
+        return make_token(lexer, TOK_COMMA, lexer->current - 1); // ,
+
+    case '.':
+        lexer->current++;
+        return make_token(lexer, TOK_DOT, lexer->current - 1); // .
+
+    case ':':
+        lexer->current++;
+        return make_token(lexer, TOK_COLON, lexer->current - 1); // :
+
+    case '\\':
+        lexer->current++;
+        return make_token(lexer, TOK_BACKSLASH, lexer->current - 1); // '\'
+
+    case '@':
+        lexer->current++;
+        return make_token(lexer, TOK_POINT_STAR, lexer->current - 1); // @
+
+    case '`':
+        lexer->current++;
+        return make_token(lexer, TOK_POINT_AND, lexer->current - 1); // `
+    }
+
+    if (*lexer->current == '\n')
+    {
+        lexer->current++;
+        return make_token(lexer, TOK_NEWLINE, lexer->current - 1); // NEWLINE
+    }
+
+    return lex_operator(lexer); // OPERATOR
+}
+
+void lexer_scan_all(Lexer *lexer, TokenStream *ts)
 {
     for (;;)
     {
@@ -464,10 +557,10 @@ Token lex_operator(Lexer *lexer)
     for (int i = 0; operators[i].text; i++)
     {
 
-        if ((lexer->end - start) >= operators[1].length &&
-            strncmp(start, operators[i].text, operators[1].length) == 0)
+        if ((lexer->end - start) >= operators[i].length &&
+            strncmp(start, operators[i].text, operators[i].length) == 0)
         {
-            lexer->current += operators[1].length;
+            lexer->current += operators[i].length;
             return make_token(lexer, operators[i].type, start);
         }
     }
@@ -475,87 +568,3 @@ Token lex_operator(Lexer *lexer)
     lexer->current++;
     return make_token(lexer, TOK_IDENTIFIER, start);
 }
-
-// Return the next token from the input stream. Skips whitespace and handles
-// all single-character tokens as well as multi-character operators, literals,
-// identifiers, numbers, strings, and comments.
-Token lexer_next(Lexer *lexer)
-{
-    skip_whitespace(lexer); // SKIP WHITESPACE
-
-    if (lexer->current >= lexer->end)
-        return make_token(lexer, TOK_EOF, lexer->current); // END OF FILE
-
-    char currentchar = *lexer->current;
-
-    if (IS_ALPHA(currentchar) || currentchar == '_') // IDENTIFIER
-        return lex_identifier(lexer);
-
-    if (IS_DIGIT(currentchar)) // NUMBER
-        return lex_number(lexer);
-
-    if (currentchar == '"') // STRING
-        return lex_string(lexer);
-
-    if ((lexer->end - lexer->current) > 1 && currentchar == '/' && lexer->current[1] == '/') // COMMENT
-        return lex_comment(lexer);
-
-    switch (*lexer->current)
-    {
-    case '(':
-        lexer->current++;
-        return make_token(lexer, TOK_LPAREN, lexer->current - 1); // (
-
-    case ')':
-        lexer->current++;
-        return make_token(lexer, TOK_RPAREN, lexer->current - 1); // )
-
-    case '{':
-        lexer->current++;
-        return make_token(lexer, TOK_LBRACE, lexer->current - 1); // {
-
-    case '}':
-        lexer->current++;
-        return make_token(lexer, TOK_RBRACE, lexer->current - 1); // }
-
-    case '[':
-        lexer->current++;
-        return make_token(lexer, TOK_LBRACKET, lexer->current - 1); // [
-
-    case ']':
-        lexer->current++;
-        return make_token(lexer, TOK_RBRACKET, lexer->current - 1); // ]
-
-    case ',':
-        lexer->current++;
-        return make_token(lexer, TOK_COMMA, lexer->current - 1); // ,
-
-    case '.':
-        lexer->current++;
-        return make_token(lexer, TOK_DOT, lexer->current - 1); // .
-
-    case ':':
-        lexer->current++;
-        return make_token(lexer, TOK_COLON, lexer->current - 1); // :
-
-    case '\\':
-        lexer->current++;
-        return make_token(lexer, TOK_BACKSLASH, lexer->current - 1); // '\'
-
-    case '@':
-        lexer->current++;
-        return make_token(lexer, TOK_POINT_STAR, lexer->current - 1); // @
-
-    case '`':
-        lexer->current++;
-        return make_token(lexer, TOK_POINT_AND, lexer->current - 1); // `
-    }
-
-    if (*lexer->current == '\n')
-    {
-        lexer->current++;
-        return make_token(lexer, TOK_NEWLINE, lexer->current - 1); // NEWLINE
-    }
-
-    return lex_operator(lexer); // OPERATOR
-} 
