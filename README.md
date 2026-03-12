@@ -5,12 +5,22 @@ This is a Project taken on by me, r4dianc3, and is the brainchild of talking to 
 ## It will include-
 
 - ThermOS(Operating system)
+    1. Inferno(System Cleaner)
 - Magma(Programming language)
-- Spark(Image File Format)
+- Fotix(Image File Format)
 - Blaze(Video File Format)
 - Echo(Sound File Format)
-- Nitrogen(Browser)
+- Veldur(Browser)
 - Firebreak(Search engine)
+- HeatMap(File Explorer)
+- Hadeon(Command Line Interface)
+- Ambust(Anti-virus)
+- Spark(Text Editor)
+- Grafis(Office suite)
+    1. Verbis(DOC reader)
+    2. Lucis(Slide reader)
+    3. Quantis(Spreadsheet reader)
+- Refractus(Media Player)
 
 ## Why I've created it
 
