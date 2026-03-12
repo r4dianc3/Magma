@@ -12,7 +12,7 @@ RETURN
 IF
 ELSE
 WHILE
-BREAK
+BREAK - Break loops
 IMPORT
 STRUCT - Structure 
 ENUM - Enumeration
@@ -31,6 +31,9 @@ SWITCH
 VOID - nothing
 START
 TYPEDEF
+PRINTT - Print to console
+GLOBAL - Makes vars Global
+LIB- import libraries
 
 # arithmetic operators
 PLUS - +
