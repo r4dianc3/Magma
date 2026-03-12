@@ -46,6 +46,7 @@ typedef enum TokenTypeEnum
     TOK_START,
     TOK_TYPEDEF,
     TOK_GLOBAL,
+    TOK_PRINTT,
 
     // OPERATORS: arithmetic and other symbols
     TOK_PLUS,    // +
@@ -343,6 +344,11 @@ TokenType check_keyword(const char *start, uint32_t length)
     case 't':
         if (length == 7 && memcmp(start, "typedef", 7) == 0)
             return TOK_TYPEDEF; // TYPEDEF
+        break;
+
+    case 'p':
+        if (length == 6 && memcmp(start, "Printt", 6) == 0)
+            return TOK_PRINTT; // PRINT
         break;
     }
 
