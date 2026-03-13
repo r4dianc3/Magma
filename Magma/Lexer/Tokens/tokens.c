@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 
 // TokenTypeEnum defines all possible token kinds the lexer can produce.
 typedef enum TokenTypeEnum
@@ -170,4 +168,19 @@ typedef struct TokenStruct
     TokenType type;
     const char *start;
     uint32_t length;
+    uint32_t line;
+    uint32_t column;
 } Token;
+
+// Construct a Token given the lexer, type, and starting position.
+// The length is computed from the difference between the current pointer
+// and the start pointer.
+Token make_token(TokenType type, const char *start, int length, int line)
+{
+    Token token;
+    token.type = type;
+    token.start = start;
+    token.length = length;
+    token.line = line;
+    return token;
+}
