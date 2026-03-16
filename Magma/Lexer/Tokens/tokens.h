@@ -39,7 +39,7 @@ typedef enum TokenTypeEnum
     TOK_SWITCH,
     TOK_VOID,
     TOK_START,
-    TOK_TYPEDEF,
+    TOK_ALIAS,
     TOK_GLOBAL,
     TOK_PRINTT, // PRINT TO CONSOLE
     TOK_LIB,    // IMPORT LIBRARY

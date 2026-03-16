@@ -271,11 +271,8 @@ TokenType check_keyword(const char *start, uint32_t length)
     case 'a':
         if (length == 5 && memcmp(start, "array", 5) == 0)
             return TOK_ARRAY; // ARRAY
-        break;
-
-    case 't':
-        if (length == 7 && memcmp(start, "typedef", 7) == 0)
-            return TOK_TYPEDEF; // TYPEDEF
+        if (length == 5 && memcmp(start, "alias", 5) == 0)
+            return TOK_ALIAS;
         break;
 
     case 'p':
@@ -287,7 +284,7 @@ TokenType check_keyword(const char *start, uint32_t length)
         if (length == 3 && memcmp(start, "lib", 3) == 0)
             return TOK_LIB; // IMPORT LIBRARY
         break;
-    
+
     case 'b':
         if (length == 5 && memcmp(start, "break", 5) == 0)
             return TOK_BREAK;

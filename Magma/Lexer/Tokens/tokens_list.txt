@@ -1,5 +1,5 @@
 # literals
-IDENTIFIER - not reserved keyword name identifier
+IDENTIFIER - not keyword
 NUMBER - 0-9
 FLOAT - 0-9.0-9
 STRING - "abc"
@@ -12,7 +12,7 @@ RETURN
 IF
 ELSE
 WHILE
-BREAK - Break loops
+BREAK
 IMPORT
 STRUCT - Structure 
 ENUM - Enumeration
@@ -30,7 +30,7 @@ ARRAY
 SWITCH
 VOID - nothing
 START
-TYPEDEF
+ALIAS
 PRINTT - Print to console
 GLOBAL - Makes vars Global
 LIB- import libraries
@@ -96,5 +96,5 @@ BACKSLASH - \
 
 # special
 COMMENT - //
-NEWLINE - /n
+NEWLINE - \n
 EOF - end of file
