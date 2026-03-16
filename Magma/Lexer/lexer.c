@@ -80,7 +80,7 @@ Token lexer_next(Lexer *lexer)
     skip_whitespace(lexer); // SKIP WHITESPACE
 
     if (lexer->current >= lexer->end)
-        return make_token(lexer, TOK_EOF, lexer->current, lexer->line, lexer->column); // END OF FILE
+        return make_token(TOK_EOF, lexer->current, (lexer->end - lexer->current), lexer->line, lexer->column); // END OF FILE
 
     char currentchar = *lexer->current;
 
@@ -101,62 +101,62 @@ Token lexer_next(Lexer *lexer)
     case '(':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_LPAREN, lexer->current - 1, lexer->line, lexer->column); // (
+        return make_token(TOK_LPAREN, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // (
 
     case ')':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_RPAREN, lexer->current - 1, lexer->line, lexer->column); // )
+        return make_token(TOK_RPAREN, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // )
 
     case '{':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_LBRACE, lexer->current - 1, lexer->line, lexer->column); // {
+        return make_token(TOK_LBRACE, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // {
 
     case '}':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_RBRACE, lexer->current - 1, lexer->line, lexer->column); // }
+        return make_token(TOK_RBRACE, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // }
 
     case '[':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_LBRACKET, lexer->current - 1, lexer->line, lexer->column); // [
+        return make_token(TOK_LBRACKET, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // [
 
     case ']':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_RBRACKET, lexer->current - 1, lexer->line, lexer->column); // ]
+        return make_token(TOK_RBRACKET, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // ]
 
     case ',':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_COMMA, lexer->current - 1, lexer->line, lexer->column); // ,
+        return make_token(TOK_COMMA, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // ,
 
     case '.':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_DOT, lexer->current - 1, lexer->line, lexer->column); // .
+        return make_token(TOK_DOT, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // .
 
     case ':':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_COLON, lexer->current - 1, lexer->line, lexer->column); // :
+        return make_token(TOK_COLON, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // :
 
     case '\\':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_BACKSLASH, lexer->current - 1, lexer->line, lexer->column); // '\'
+        return make_token(TOK_BACKSLASH, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // '\'
 
     case '@':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_POINT_STAR, lexer->current - 1, lexer->line, lexer->column); // @
+        return make_token(TOK_POINT_STAR, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // @
 
     case '`':
         lexer->current++;
         lexer->column++;
-        return make_token(lexer, TOK_POINT_AND, lexer->current - 1, lexer->line, lexer->column); // `
+        return make_token(TOK_POINT_AND, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // `
     }
 
     if (*lexer->current == '\n')
@@ -164,7 +164,7 @@ Token lexer_next(Lexer *lexer)
         lexer->current++;
         lexer->line++;
         lexer->column = 0;
-        return make_token(lexer, TOK_NEWLINE, lexer->current - 1, lexer->line, lexer->column); // NEWLINE
+        return make_token(TOK_NEWLINE, lexer->current - 1, (lexer->end - (lexer->current - 1)), lexer->line, lexer->column); // NEWLINE
     }
 
     return lex_operator(lexer); // OPERATOR
@@ -303,14 +303,15 @@ Token lex_identifier(Lexer *lexer)
     const char *start = lexer->current; // remember where identifier begins
 
     // consume alphanumeric characters or underscore
-    while (lexer->current < lexer->end &&
-           (IS_ALNUM(*lexer->current) || *lexer->current == '_'))
+    while (lexer->current < lexer->end && (IS_ALNUM(*lexer->current) || *lexer->current == '_'))
+    {
         lexer->current++;
-    lexer->column++;
+        lexer->column++;
+    }
 
     // determine if the scanned text matches a keyword
     TokenType type = check_keyword(start, (uint32_t)(lexer->current - start));
-    return make_token(lexer, type, start, lexer->line, lexer->column);
+    return make_token(type, start, (lexer->end - lexer->current), lexer->line, lexer->column);
 }
 
 // Scan a numeric literal; recognizes integer and floating point by looking for a
@@ -322,8 +323,10 @@ Token lex_number(Lexer *lexer)
 
     // read integer part digits
     while (lexer->current < lexer->end && IS_DIGIT(*lexer->current))
+    {
         lexer->current++;
-    lexer->column++;
+        lexer->column++;
+    }
 
     // check for fractional part
     if (lexer->current < lexer->end && *lexer->current == '.')
@@ -336,11 +339,11 @@ Token lex_number(Lexer *lexer)
             lexer->current++;
         lexer->column++;
 
-        return make_token(lexer, TOK_FLOAT, start, lexer->line, lexer->column);
+        return make_token(TOK_FLOAT, start, (lexer->end - start), lexer->line, lexer->column);
     }
 
     // no decimal point -> integer
-    return make_token(lexer, TOK_NUMBER, start, lexer->line, lexer->column);
+    return make_token(TOK_NUMBER, start, (lexer->end - start), lexer->line, lexer->column);
 }
 
 // Scan a double-quoted string literal. Does not currently handle escapes.
@@ -354,14 +357,18 @@ Token lex_string(Lexer *lexer)
 
     // advance until closing quote or end-of-input
     while (lexer->current < lexer->end && *lexer->current != '"')
+    {
         lexer->current++;
-    lexer->column++;
+        lexer->column++;
+    }
 
     if (lexer->current < lexer->end)
+    {
         lexer->current++; // consume closing quote
-    lexer->column++;
+        lexer->column++;
+    }
 
-    return make_token(lexer, TOK_STRING, start, lexer->line, lexer->column);
+    return make_token(TOK_STRING, start, (lexer->end - lexer->current), lexer->line, lexer->column);
 }
 
 // Scan a single-line comment beginning with "//". The returned token includes
@@ -376,9 +383,11 @@ Token lex_comment(Lexer *lexer)
 
     // consume until end of line
     while (lexer->current < lexer->end && *lexer->current != '\n')
+    {
         lexer->current++;
-    lexer->column++;
-    return make_token(lexer, TOK_COMMENT, start, lexer->line, lexer->column);
+        lexer->column++;
+    }
+    return make_token(TOK_COMMENT, start, (lexer->end - lexer->current), lexer->line, lexer->column);
 }
 
 // Consume whitespace characters (space, tab, carriage return) but stop on
@@ -392,10 +401,13 @@ void skip_whitespace(Lexer *lexer)
         char c = *lexer->current;
 
         // skip space, tab, and carriage return only; newline is significant
-        if (c == ' ' || c == '\t' || c == '\r') {
+        if (c == ' ' || c == '\t' || c == '\r')
+        {
             lexer->current++;
             lexer->column++;
-        } else {
+        }
+        else
+        {
             break;
         }
     }
@@ -412,11 +424,11 @@ Token lex_operator(Lexer *lexer)
         {
             lexer->current += operators[i].length;
             lexer->column += operators[i].length;
-            return make_token(lexer, operators[i].type, start, lexer->line, lexer->column);
+            return make_token(operators[i].type, start, (lexer->end - lexer->current), lexer->line, lexer->column);
         }
     }
 
     lexer->current++;
     lexer->column++;
-    return make_token(lexer, TOK_IDENTIFIER, start, lexer->line, lexer->column);
+    return make_token(TOK_IDENTIFIER, start, (lexer->end - lexer->current), lexer->line, lexer->column);
 }
