@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include "Tokens/tokens.c"
+#include "Tokens/tokens.h"
 
 // Fast ASCII character classification macros used by the lexer
 // These operate on plain chars and assume ASCII encoding.
@@ -24,13 +24,13 @@ typedef struct LexerStateStruct
 {
     const char *current;
     const char *end;
-    const uint64_t *line;
-    const uint64_t *column;
+    uint32_t *line;
+    uint32_t *column;
 } Lexer;
 
 // Initialize lexer state with source buffer and length.
 // Sets current pointer to beginning and marks end.
-void lexer_init(Lexer *lexer, const char *source, size_t length, uint64_t line, uint64_t column)
+void lexer_init(Lexer *lexer, const char *source, size_t length, uint32_t line, uint32_t column)
 {
     lexer->current = source;
     lexer->end = source + length;
@@ -187,9 +187,6 @@ void lexer_scan_all(Lexer *lexer, TokenStream *ts)
 // keyword token; otherwise fall back to TOK_IDENTIFIER.
 TokenType check_keyword(const char *start, uint32_t length)
 {
-    Lexer *lexer;
-    lexer->column += length;
-
     switch (start[0])
     {
 
@@ -289,6 +286,12 @@ TokenType check_keyword(const char *start, uint32_t length)
     case 'l':
         if (length == 3 && memcmp(start, "lib", 3) == 0)
             return TOK_LIB; // IMPORT LIBRARY
+        break;
+    
+    case 'b':
+        if (length == 5 && memcmp(start, "break", 5) == 0)
+            return TOK_BREAK;
+        break;
     }
 
     return TOK_IDENTIFIER; // not a keyword
