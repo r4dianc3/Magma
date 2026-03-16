@@ -80,7 +80,7 @@ Token lexer_next(Lexer *lexer)
     skip_whitespace(lexer); // SKIP WHITESPACE
 
     if (lexer->current >= lexer->end)
-        return make_token(lexer, TOK_EOF, lexer->current); // END OF FILE
+        return make_token(lexer, TOK_EOF, lexer->current, lexer->line, lexer->column); // END OF FILE
 
     char currentchar = *lexer->current;
 
@@ -100,57 +100,71 @@ Token lexer_next(Lexer *lexer)
     {
     case '(':
         lexer->current++;
-        return make_token(lexer, TOK_LPAREN, lexer->current - 1); // (
+        lexer->column++;
+        return make_token(lexer, TOK_LPAREN, lexer->current - 1, lexer->line, lexer->column); // (
 
     case ')':
         lexer->current++;
-        return make_token(lexer, TOK_RPAREN, lexer->current - 1); // )
+        lexer->column++;
+        return make_token(lexer, TOK_RPAREN, lexer->current - 1, lexer->line, lexer->column); // )
 
     case '{':
         lexer->current++;
-        return make_token(lexer, TOK_LBRACE, lexer->current - 1); // {
+        lexer->column++;
+        return make_token(lexer, TOK_LBRACE, lexer->current - 1, lexer->line, lexer->column); // {
 
     case '}':
         lexer->current++;
-        return make_token(lexer, TOK_RBRACE, lexer->current - 1); // }
+        lexer->column++;
+        return make_token(lexer, TOK_RBRACE, lexer->current - 1, lexer->line, lexer->column); // }
 
     case '[':
         lexer->current++;
-        return make_token(lexer, TOK_LBRACKET, lexer->current - 1); // [
+        lexer->column++;
+        return make_token(lexer, TOK_LBRACKET, lexer->current - 1, lexer->line, lexer->column); // [
 
     case ']':
         lexer->current++;
-        return make_token(lexer, TOK_RBRACKET, lexer->current - 1); // ]
+        lexer->column++;
+        return make_token(lexer, TOK_RBRACKET, lexer->current - 1, lexer->line, lexer->column); // ]
 
     case ',':
         lexer->current++;
-        return make_token(lexer, TOK_COMMA, lexer->current - 1); // ,
+        lexer->column++;
+        return make_token(lexer, TOK_COMMA, lexer->current - 1, lexer->line, lexer->column); // ,
 
     case '.':
         lexer->current++;
-        return make_token(lexer, TOK_DOT, lexer->current - 1); // .
+        lexer->column++;
+        return make_token(lexer, TOK_DOT, lexer->current - 1, lexer->line, lexer->column); // .
 
     case ':':
         lexer->current++;
-        return make_token(lexer, TOK_COLON, lexer->current - 1); // :
+        lexer->column++;
+        return make_token(lexer, TOK_COLON, lexer->current - 1, lexer->line, lexer->column); // :
 
     case '\\':
         lexer->current++;
-        return make_token(lexer, TOK_BACKSLASH, lexer->current - 1); // '\'
+        lexer->column++;
+        return make_token(lexer, TOK_BACKSLASH, lexer->current - 1, lexer->line, lexer->column); // '\'
 
     case '@':
         lexer->current++;
-        return make_token(lexer, TOK_POINT_STAR, lexer->current - 1); // @
+        lexer->column++;
+        return make_token(lexer, TOK_POINT_STAR, lexer->current - 1, lexer->line, lexer->column); // @
 
     case '`':
         lexer->current++;
-        return make_token(lexer, TOK_POINT_AND, lexer->current - 1); // `
+        lexer->column++;
+        return make_token(lexer, TOK_POINT_AND, lexer->current - 1, lexer->line, lexer->column); // `
     }
 
     if (*lexer->current == '\n')
     {
         lexer->current++;
-        return make_token(lexer, TOK_NEWLINE, lexer->current - 1); // NEWLINE
+        lexer->line++;
+        lexer->column = 0;
+        return make_token(lexer, TOK_NEWLINE, lexer->current - 1, lexer->line, lexer->column); // NEWLINE
     }
 
     return lex_operator(lexer); // OPERATOR
@@ -173,6 +187,8 @@ void lexer_scan_all(Lexer *lexer, TokenStream *ts)
 // keyword token; otherwise fall back to TOK_IDENTIFIER.
 TokenType check_keyword(const char *start, uint32_t length)
 {
+    Lexer *lexer;
+    lexer->column += length;
 
     switch (start[0])
     {
@@ -290,10 +306,11 @@ Token lex_identifier(Lexer *lexer)
     while (lexer->current < lexer->end &&
            (IS_ALNUM(*lexer->current) || *lexer->current == '_'))
         lexer->current++;
+    lexer->column++;
 
     // determine if the scanned text matches a keyword
     TokenType type = check_keyword(start, (uint32_t)(lexer->current - start));
-    return make_token(lexer, type, start);
+    return make_token(lexer, type, start, lexer->line, lexer->column);
 }
 
 // Scan a numeric literal; recognizes integer and floating point by looking for a
@@ -306,21 +323,24 @@ Token lex_number(Lexer *lexer)
     // read integer part digits
     while (lexer->current < lexer->end && IS_DIGIT(*lexer->current))
         lexer->current++;
+    lexer->column++;
 
     // check for fractional part
     if (lexer->current < lexer->end && *lexer->current == '.')
     {
         lexer->current++; // consume decimal point
+        lexer->column++;
 
         // read digits after decimal
         while (lexer->current < lexer->end && IS_DIGIT(*lexer->current))
             lexer->current++;
+        lexer->column++;
 
-        return make_token(lexer, TOK_FLOAT, start);
+        return make_token(lexer, TOK_FLOAT, start, lexer->line, lexer->column);
     }
 
     // no decimal point -> integer
-    return make_token(lexer, TOK_NUMBER, start);
+    return make_token(lexer, TOK_NUMBER, start, lexer->line, lexer->column);
 }
 
 // Scan a double-quoted string literal. Does not currently handle escapes.
@@ -330,15 +350,18 @@ Token lex_string(Lexer *lexer)
     const char *start = lexer->current; // include opening quote in token
 
     lexer->current++; // skip past '"'
+    lexer->column++;
 
     // advance until closing quote or end-of-input
     while (lexer->current < lexer->end && *lexer->current != '"')
         lexer->current++;
+    lexer->column++;
 
     if (lexer->current < lexer->end)
         lexer->current++; // consume closing quote
+    lexer->column++;
 
-    return make_token(lexer, TOK_STRING, start);
+    return make_token(lexer, TOK_STRING, start, lexer->line, lexer->column);
 }
 
 // Scan a single-line comment beginning with "//". The returned token includes
@@ -349,12 +372,13 @@ Token lex_comment(Lexer *lexer)
     const char *start = lexer->current; // starting at first '/'
 
     lexer->current += 2; // skip '//'
+    lexer->column += 2;
 
     // consume until end of line
     while (lexer->current < lexer->end && *lexer->current != '\n')
         lexer->current++;
-
-    return make_token(lexer, TOK_COMMENT, start);
+    lexer->column++;
+    return make_token(lexer, TOK_COMMENT, start, lexer->line, lexer->column);
 }
 
 // Consume whitespace characters (space, tab, carriage return) but stop on
@@ -368,10 +392,12 @@ void skip_whitespace(Lexer *lexer)
         char c = *lexer->current;
 
         // skip space, tab, and carriage return only; newline is significant
-        if (c == ' ' || c == '\t' || c == '\r')
+        if (c == ' ' || c == '\t' || c == '\r') {
             lexer->current++;
-        else
+            lexer->column++;
+        } else {
             break;
+        }
     }
 }
 
@@ -382,14 +408,15 @@ Token lex_operator(Lexer *lexer)
     for (int i = 0; operators[i].text; i++)
     {
 
-        if ((lexer->end - start) >= operators[i].length &&
-            strncmp(start, operators[i].text, operators[i].length) == 0)
+        if ((lexer->end - start) >= operators[i].length && strncmp(start, operators[i].text, operators[i].length) == 0)
         {
             lexer->current += operators[i].length;
-            return make_token(lexer, operators[i].type, start);
+            lexer->column += operators[i].length;
+            return make_token(lexer, operators[i].type, start, lexer->line, lexer->column);
         }
     }
 
     lexer->current++;
-    return make_token(lexer, TOK_IDENTIFIER, start);
+    lexer->column++;
+    return make_token(lexer, TOK_IDENTIFIER, start, lexer->line, lexer->column);
 }

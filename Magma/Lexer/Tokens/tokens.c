@@ -175,12 +175,13 @@ typedef struct TokenStruct
 // Construct a Token given the lexer, type, and starting position.
 // The length is computed from the difference between the current pointer
 // and the start pointer.
-Token make_token(TokenType type, const char *start, int length, int line)
+Token make_token(TokenType type, const char *start, uint32_t length, uint32_t line, uint32_t column)
 {
     Token token;
     token.type = type;
     token.start = start;
     token.length = length;
     token.line = line;
+    token.column = column;
     return token;
 }
