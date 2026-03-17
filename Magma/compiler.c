@@ -12,6 +12,7 @@ void init() {
 
 int main()
 {
+    void init();
     void lexer_scan_all();
 
     return 0;
