@@ -1,6 +1,0 @@
-*.log
-thumbs.db
-.DS_Store
-node_modules/
-.vscode/
-*.exe
